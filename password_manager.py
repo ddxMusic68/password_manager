@@ -1,7 +1,7 @@
 from cryptography.fernet import Fernet
 import tkinter as tk
 import json as js
-import sys
+import sys, os
 
 
 # tkinter initialization
@@ -24,12 +24,18 @@ def decrypt_message(encrypted_message, key):
 
 
 # initialising json server
-try: 
-    with open(f"{sys.path[0]}/encrypted_passwords.json", "r"):
-        pass
-except:
-    with open(f"{sys.path[0]}/encrypted_passwords.json", "w") as file:
-        file.write(r"{}")
+def resource_path(filename):
+    if getattr(sys, 'frozen', False):  # if running as .exe
+        base_path = os.path.dirname(sys.executable)
+    else:
+        base_path = sys.path[0]
+    return os.path.join(base_path, filename)
+
+path = resource_path("encrypted_passwords.json")
+
+if not os.path.exists(path):
+    with open(path, "w") as f:
+        f.write("{}") 
 
 
 # tkinter funcs and variables
@@ -46,7 +52,7 @@ def get_text():
 
     addapplication.set("")
     addpassword.set("")
-    with open(f"{sys.path[0]}/encrypted_passwords.json", "r+") as file:
+    with open(path, "r+") as file:
         data = js.loads(file.read())
         data[f"{application}"] = f"{password}"
         file.seek(0) #so it will be truncated
@@ -54,7 +60,7 @@ def get_text():
     update_list()
 
 def update_list():
-    with open(f"{sys.path[0]}/encrypted_passwords.json", "r") as file:
+    with open(path, "r") as file:
         data = file.read()
         data = js.loads(data)
         data = list(data)
@@ -75,7 +81,7 @@ def func_show_password():
 
 def func_delete():
     selected = password_list.curselection()
-    with open(f"{sys.path[0]}/encrypted_passwords.json", "r+") as file:
+    with open(path, "r+") as file:
         data = js.loads(file.read())
         data_list = list(data)
         data.pop(data_list[selected[0]])
@@ -87,7 +93,7 @@ def func_delete():
 def func_copy_password():
     selected = password_list.curselection()
     key = key_var.get().encode()
-    with open(f"{sys.path[0]}/encrypted_passwords.json", "r+") as file:
+    with open(path, "r+") as file:
         data = js.loads(file.read())
         data_list = list(data)
         encoded_password = data[data_list[selected[0]]].encode()
@@ -97,7 +103,6 @@ def func_copy_password():
 
 
 # tkinter gui
-
 password_list = tk.Listbox(window) # list of application 
 password_list.pack(side="left", fill="both", expand=True)
 update_list() #updates list at the start
